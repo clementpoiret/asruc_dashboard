@@ -247,9 +247,7 @@ app.layout = html.Div(
             [
                 html.Div(
                     [
-                        html.H6(
-                            "Données Brutes"
-                        ),
+                        html.H6("Données Brutes"),
                         dash_table.DataTable(
                             id="table",
                             columns=[{
@@ -273,7 +271,9 @@ app.layout = html.Div(
                             },
                             style_table={'overflowX': 'scroll'},
                         ),
-                        html.P("Avec DPZV la Distance par Zone de Vitesse, et TZFC le Temps par Zone de Fréquence Cardiaque (FC)")
+                        html.
+                        P("Avec DPZV la Distance par Zone de Vitesse, et TZFC le Temps par Zone de Fréquence Cardiaque (FC)"
+                         )
                     ],
                     className="pretty_container seven columns",
                 ),
