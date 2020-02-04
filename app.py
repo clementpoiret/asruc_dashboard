@@ -4,17 +4,17 @@ import datetime as dt
 import pathlib
 
 import dash
-import dash_table
 import dash_core_components as dcc
 import dash_html_components as html
+import dash_table
 import numpy as np
 import pandas as pd
 from dash.dependencies import Input, Output
 
 import utils.etl as etl
 # Multi-dropdown options
-from controls import (DPZV, POPULATION, TIME_FRAME_NAMES, TIME_FRAME_VALUES,
-                      TZFC, COLNAMES, PRETTY_COLNAMES)
+from controls import (COLNAMES, DPZV, POPULATION, PRETTY_COLNAMES,
+                      TIME_FRAME_NAMES, TIME_FRAME_VALUES, TZFC)
 
 # get relative data folder
 PATH = pathlib.Path(__file__).parent
