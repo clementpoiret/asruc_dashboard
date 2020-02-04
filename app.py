@@ -25,6 +25,7 @@ app = dash.Dash(__name__,
                     "name": "viewport",
                     "content": "width=device-width"
                 }])
+app.title = "ASRUC Dashboard"
 server = app.server
 
 # Create controls
@@ -130,6 +131,7 @@ app.layout = html.Div(
                         Rouen Université Club) Rugby. L'application est développée
                         en tant que preuve de concept, et est complètement
                         automatisée.*
+
                         Version : 1.0.0 (2020-02-04)
                         ____
                         """),
