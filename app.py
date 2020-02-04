@@ -130,6 +130,8 @@ app.layout = html.Div(
                         Rouen Université Club) Rugby. L'application est développée
                         en tant que preuve de concept, et est complètement
                         automatisée.*
+                        Version : 1.0.0 (2020-02-04)
+                        ____
                         """),
                         html.Br(),
                         html.H6(
