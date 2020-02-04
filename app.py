@@ -1,22 +1,20 @@
 # Import required libraries
 import copy
 import datetime as dt
-import math
 import pathlib
-import pickle
 
 import dash
+import dash_table
 import dash_core_components as dcc
 import dash_html_components as html
 import numpy as np
 import pandas as pd
-import plotly.figure_factory as ff
-from dash.dependencies import ClientsideFunction, Input, Output, State
+from dash.dependencies import Input, Output
 
 import utils.etl as etl
 # Multi-dropdown options
 from controls import (DPZV, POPULATION, TIME_FRAME_NAMES, TIME_FRAME_VALUES,
-                      TZFC)
+                      TZFC, COLNAMES, PRETTY_COLNAMES)
 
 # get relative data folder
 PATH = pathlib.Path(__file__).parent
@@ -126,18 +124,18 @@ app.layout = html.Div(
             [
                 html.Div(
                     [
+                        dcc.Markdown("""
+                        *Dashboard interactif pour l'analyse des entraînements
+                        de l'équipe féminine de l'ASRUC (Association Sportive
+                        Rouen Université Club) Rugby. L'application est développée
+                        en tant que preuve de concept, et est complètement
+                        automatisée.*
+                        """),
+                        html.Br(),
                         html.H6(
                             "Modifiez les paramètres d'analyse :",
                             className="control_label",
                         ),
-                        html.P("""
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
-                        Fusce vitae mollis eros, in accumsan urna. Donec scelerisque 
-                        sed ligula ac scelerisque. Duis pulvinar luctus massa, ac 
-                        lobortis orci convallis in. Proin egestas, nunc eu mollis 
-                        posuere, leo dolor malesuada dui, nec elementum risus turpis 
-                        id purus. Vivamus convallis accumsan sapien a imperdiet.
-                        """),
                         html.P("Temps d'analyse:", className="timeframe_label"),
                         dcc.Dropdown(
                             id="timeframe_selector",
@@ -239,8 +237,49 @@ app.layout = html.Div(
                     className="pretty_container five columns",
                 ),
                 html.Div(
-                    [dcc.Graph(id="aggregate_graph")],
+                    [dcc.Graph(id="sprints_graph")],
                     className="pretty_container seven columns",
+                ),
+            ],
+            className="row flex-display",
+        ),
+        html.Div(
+            [
+                html.Div(
+                    [
+                        html.H6(
+                            "Données Brutes"
+                        ),
+                        dash_table.DataTable(
+                            id="table",
+                            columns=[{
+                                "name": i,
+                                "id": i
+                            } for i in PRETTY_COLNAMES],
+                            page_current=0,
+                            page_size=10,
+                            page_action="custom",
+                            style_header={
+                                "border": "1px solid #12202b",
+                                "textAlign": "center",
+                                "backgroundColor": "#142430",
+                                "fontWeight": "bold"
+                            },
+                            style_cell={
+                                "border": "1px solid #142430",
+                                "textAlign": "center",
+                                "backgroundColor": "#182B3A",
+                                "color": "white"
+                            },
+                            style_table={'overflowX': 'scroll'},
+                        ),
+                        html.P("Avec DPZV la Distance par Zone de Vitesse, et TZFC le Temps par Zone de Fréquence Cardiaque (FC)")
+                    ],
+                    className="pretty_container seven columns",
+                ),
+                html.Div(
+                    [dcc.Graph(id="power_graph")],
+                    className="pretty_container five columns",
                 ),
             ],
             className="row flex-display",
@@ -347,7 +386,7 @@ def make_charge_figure(timeframe_selector, population_selector):
                 x=index,
                 y=physical,
                 line=dict(shape="spline", smoothing=2, width=1,
-                          color="#fac1b7"),
+                          color="#5e35b1"),
                 marker=dict(symbol="diamond-open"),
             ),
             dict(
@@ -357,7 +396,7 @@ def make_charge_figure(timeframe_selector, population_selector):
                 x=index,
                 y=mental,
                 line=dict(shape="spline", smoothing=2, width=1,
-                          color="#a9bb95"),
+                          color="#43a047"),
                 marker=dict(symbol="diamond-open"),
             ),
         ]
@@ -394,7 +433,7 @@ def make_dt_figure(timeframe_selector, population_selector, dpzv_selector):
         population = population_selector
 
     seances_filtered = filter_dataset(seances, timeframe, population)
-    seances_graph = seances_filtered.groupby(["Nom"]).mean()
+    seances_graph = seances_filtered.groupby(["Nom"]).sum()
     index = seances_graph.index
     y = seances_graph[dpzv_selector]
 
@@ -417,6 +456,7 @@ def make_dt_figure(timeframe_selector, population_selector, dpzv_selector):
                 name="Distance par Zones de Vitesse",
                 x=index,
                 y=y,
+                marker=dict(color="#43a047"),
             ),
         ]
 
@@ -428,7 +468,7 @@ def make_dt_figure(timeframe_selector, population_selector, dpzv_selector):
         layout_dt["title"] = "Distances Parcourues ({}) sur {}".format(
             DPZV[dpzv_selector], text_timeframe)
 
-        layout_dt["margin"] = dict(l=40, r=0, t=40, b=60)
+        layout_dt["margin"] = dict(l=45, r=0, t=40, b=60)
         layout_dt["xaxis"] = {"title": "Joueuses"}
         layout_dt["yaxis"] = {"title": "Distance (m)"}
 
@@ -481,7 +521,7 @@ def make_fc_figure(timeframe_selector, population_selector):
             dict(
                 type="scatter",
                 mode="markers",
-                name="Variabilité Cardiage",
+                name="Variabilité Cardiaque",
                 x=x,
                 y=y,
                 text=text,
@@ -510,19 +550,22 @@ def make_fc_figure(timeframe_selector, population_selector):
     return figure
 
 
-# Selectors, main graph -> aggregate graph
+# Selectors, main graph -> sprint graph
 @app.callback(
-    Output("aggregate_graph", "figure"),
+    Output("sprints_graph", "figure"),
     [
         Input("timeframe_selector", "value"),
         Input("population_selector", "value")
     ],
 )
-def make_aggregate_figure(timeframe_selector, population_selector):
+def make_sprint_figure(timeframe_selector, population_selector):
 
-    layout_dist = copy.deepcopy(layout)
+    layout_sprint = copy.deepcopy(layout)
 
     timeframe = TIME_FRAME_VALUES[timeframe_selector]
+
+    if not timeframe:
+        timeframe = 7
 
     if population_selector == "ALL":
         population = None
@@ -530,11 +573,49 @@ def make_aggregate_figure(timeframe_selector, population_selector):
         population = population_selector
 
     seances_filtered = filter_dataset(seances, timeframe, population)
-    hist_data = [np.array(seances_filtered.Power.values)]
-    group_labels = ["Distribution des puissances développée"]
+    seances_graph = seances_filtered.groupby(["Nom", "Date"
+                                             ]).sum().groupby(["Date"]).mean()
+    y = seances_graph.Sprints
+    index = seances_graph.index
 
-    figure = ff.create_distplot(hist_data, group_labels)
-    #figure = dict(data=data, layout=layout_aggregate)
+    if index is None:
+        annotation = dict(
+            text="Pas de données disponibles",
+            x=0.5,
+            y=0.5,
+            align="center",
+            showarrow=False,
+            xref="paper",
+            yref="paper",
+        )
+        layout_sprint["annotations"] = [annotation]
+        data = []
+    else:
+        data = [
+            dict(
+                type="scatter",
+                mode="lines+markers",
+                name="Sprints",
+                x=index,
+                y=y,
+                line=dict(shape="spline", smoothing=2, width=1,
+                          color="#43a047"),
+                marker=dict(symbol="diamond-open"),
+            ),
+        ]
+
+        if not timeframe:
+            text_timeframe = "le Dernier Entraînement"
+        else:
+            text_timeframe = "{} Jours".format(timeframe)
+
+        layout_sprint["title"] = "Sprints sur {}".format(text_timeframe)
+
+        layout_sprint["margin"] = dict(l=40, r=0, t=40, b=60)
+        layout_sprint["xaxis"] = {"title": "Jours"}
+        layout_sprint["yaxis"] = {"title": "Sprints"}
+
+    figure = dict(data=data, layout=layout_sprint)
     return figure
 
 
@@ -565,15 +646,6 @@ def make_pie_figure(timeframe_selector, population_selector):
         for dpzv in DPZV.values()
     ]
 
-    tzfc_values = [
-        seances_filtered.loc[seances_filtered.Fcmax > 0, tzfc].mean()
-        for tzfc in TZFC.keys()
-    ]
-    tzfc_text = [
-        "Distance Passée dans l'Interval {}".format(dpzv)
-        for dpzv in DPZV.values()
-    ]
-
     data = [
         dict(
             type="pie",
@@ -594,6 +666,90 @@ def make_pie_figure(timeframe_selector, population_selector):
                                 bgcolor="rgba(0,0,0,0)")
 
     figure = dict(data=data, layout=layout_pie)
+    return figure
+
+
+# Selectors, main -> table
+@app.callback(
+    Output("table", "data"),
+    [Input("table", "page_current"),
+     Input("table", "page_size")],
+)
+def make_table(page_current, page_size):
+    table = seances[COLNAMES]
+    table.columns = PRETTY_COLNAMES
+
+    return table.iloc[page_current * page_size:(page_current + 1) *
+                      page_size].to_dict("records")
+
+
+# Selectors, main graph -> power graph
+@app.callback(
+    Output("power_graph", "figure"),
+    [
+        Input("timeframe_selector", "value"),
+        Input("population_selector", "value")
+    ],
+)
+def make_power_figure(timeframe_selector, population_selector):
+
+    layout_power = copy.deepcopy(layout)
+
+    timeframe = TIME_FRAME_VALUES[timeframe_selector]
+
+    if not timeframe:
+        timeframe = 7
+
+    if population_selector == "ALL":
+        population = None
+    else:
+        population = population_selector
+
+    seances_filtered = filter_dataset(seances, timeframe, population)
+    seances_graph = seances_filtered[seances_filtered.Power < 200].groupby(
+        ["Nom", "Date"]).sum().groupby(["Date"]).mean()
+    y = seances_graph.Power
+    index = seances_graph.index
+
+    if index is None:
+        annotation = dict(
+            text="Pas de données disponibles",
+            x=0.5,
+            y=0.5,
+            align="center",
+            showarrow=False,
+            xref="paper",
+            yref="paper",
+        )
+        layout_power["annotations"] = [annotation]
+        data = []
+    else:
+        data = [
+            dict(
+                type="scatter",
+                mode="lines+markers",
+                name="Puissance",
+                x=index,
+                y=y,
+                line=dict(shape="spline", smoothing=2, width=1,
+                          color="#5e35b1"),
+                marker=dict(symbol="diamond-open"),
+            ),
+        ]
+
+        if not timeframe:
+            text_timeframe = "le Dernier Entraînement"
+        else:
+            text_timeframe = "{} Jours".format(timeframe)
+
+        layout_power["title"] = "Puissance Développée sur {}".format(
+            text_timeframe)
+
+        layout_power["margin"] = dict(l=40, r=0, t=40, b=60)
+        layout_power["xaxis"] = {"title": "Jours"}
+        layout_power["yaxis"] = {"title": "Puissance"}
+
+    figure = dict(data=data, layout=layout_power)
     return figure
 
 
