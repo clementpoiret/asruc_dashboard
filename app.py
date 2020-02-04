@@ -132,7 +132,7 @@ app.layout = html.Div(
                         en tant que preuve de concept, et est complètement
                         automatisée.*
 
-                        Version : 1.0.0 (2020-02-04)
+                        Version : 1.0.0-1 (2020-02-04)
                         ____
                         """),
                         html.Br(),
@@ -409,8 +409,11 @@ def make_charge_figure(timeframe_selector, population_selector):
             "title"] = "Charges Physiques et Mentales sur {} Jours".format(
                 timeframe)
         layout_charge["margin"] = dict(l=40, r=0, t=40, b=40)
-        layout_charge["xaxis"] = {"title": "Séance"}
-        layout_charge["yaxis"] = {"title": "Fatigue entre 1 et 10"}
+        layout_charge["xaxis"] = {"title": "Séance", "fixedrange": True}
+        layout_charge["yaxis"] = {
+            "title": "Fatigue entre 1 et 10",
+            "fixedrange": True
+        }
 
     figure = dict(data=data, layout=layout_charge)
     return figure
@@ -473,8 +476,8 @@ def make_dt_figure(timeframe_selector, population_selector, dpzv_selector):
             DPZV[dpzv_selector], text_timeframe)
 
         layout_dt["margin"] = dict(l=45, r=0, t=40, b=60)
-        layout_dt["xaxis"] = {"title": "Joueuses"}
-        layout_dt["yaxis"] = {"title": "Distance (m)"}
+        layout_dt["xaxis"] = {"title": "Joueuses", "fixedrange": True}
+        layout_dt["yaxis"] = {"title": "Distance (m)", "fixedrange": True}
 
     figure = dict(data=data, layout=layout_dt)
 
@@ -547,8 +550,14 @@ def make_fc_figure(timeframe_selector, population_selector):
         layout_fc["title"] = "Variabilité Cardiaque sur {}".format(
             text_timeframe)
         layout_fc["margin"] = dict(l=40, r=0, t=40, b=40)
-        layout_fc["xaxis"] = {"title": "Variabilité Cardiaque Basse Fréquence"}
-        layout_fc["yaxis"] = {"title": "Variabilité Cardiaque Haute Fréquence"}
+        layout_fc["xaxis"] = {
+            "title": "Variabilité Cardiaque Basse Fréquence",
+            "fixedrange": True
+        }
+        layout_fc["yaxis"] = {
+            "title": "Variabilité Cardiaque Haute Fréquence",
+            "fixedrange": True
+        }
 
     figure = dict(data=data, layout=layout_fc)
     return figure
@@ -616,8 +625,8 @@ def make_sprint_figure(timeframe_selector, population_selector):
         layout_sprint["title"] = "Sprints sur {}".format(text_timeframe)
 
         layout_sprint["margin"] = dict(l=40, r=0, t=40, b=60)
-        layout_sprint["xaxis"] = {"title": "Jours"}
-        layout_sprint["yaxis"] = {"title": "Sprints"}
+        layout_sprint["xaxis"] = {"title": "Jours", "fixedrange": True}
+        layout_sprint["yaxis"] = {"title": "Sprints", "fixedrange": True}
 
     figure = dict(data=data, layout=layout_sprint)
     return figure
@@ -750,8 +759,8 @@ def make_power_figure(timeframe_selector, population_selector):
             text_timeframe)
 
         layout_power["margin"] = dict(l=40, r=0, t=40, b=60)
-        layout_power["xaxis"] = {"title": "Jours"}
-        layout_power["yaxis"] = {"title": "Puissance"}
+        layout_power["xaxis"] = {"title": "Jours", "fixedrange": True}
+        layout_power["yaxis"] = {"title": "Puissance", "fixedrange": True}
 
     figure = dict(data=data, layout=layout_power)
     return figure
