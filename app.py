@@ -203,8 +203,6 @@ app.layout = html.Div(
                         html.Div(
                             [dcc.Graph(id="charge_graph", 
                                        config={
-                                           'displayModeBar':False,
-                                           'queueLength':0,
                                            'staticPlot': True,
                                        })],
                             id="countGraphContainer",
@@ -228,12 +226,16 @@ app.layout = html.Div(
                             value=list(DPZV.keys())[0],
                             className="dcc_control",
                         ),
-                        dcc.Graph(id="dt_graph")
+                        dcc.Graph(id="dt_graph", config={
+                                           'staticPlot': True,
+                                       })
                     ],
                     className="pretty_container seven columns",
                 ),
                 html.Div(
-                    [dcc.Graph(id="fc_graph")],
+                    [dcc.Graph(id="fc_graph", config={
+                                           'staticPlot': True,
+                                       })],
                     className="pretty_container five columns",
                 ),
             ],
@@ -242,11 +244,15 @@ app.layout = html.Div(
         html.Div(
             [
                 html.Div(
-                    [dcc.Graph(id="pie_dt_graph")],
+                    [dcc.Graph(id="pie_dt_graph", config={
+                                           'staticPlot': True,
+                                       })],
                     className="pretty_container five columns",
                 ),
                 html.Div(
-                    [dcc.Graph(id="sprints_graph")],
+                    [dcc.Graph(id="sprints_graph", config={
+                                           'staticPlot': True,
+                                       })],
                     className="pretty_container seven columns",
                 ),
             ],
@@ -287,7 +293,9 @@ app.layout = html.Div(
                     className="pretty_container seven columns",
                 ),
                 html.Div(
-                    [dcc.Graph(id="power_graph")],
+                    [dcc.Graph(id="power_graph", config={
+                                           'staticPlot': True,
+                                       })],
                     className="pretty_container five columns",
                 ),
             ],
