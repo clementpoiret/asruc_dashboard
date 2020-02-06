@@ -201,7 +201,7 @@ app.layout = html.Div(
                             className="row container-display",
                         ),
                         html.Div(
-                            [dcc.Graph(id="charge_graph", config=dict("staticPlot"=True))],
+                            [dcc.Graph(id="charge_graph")],
                             id="countGraphContainer",
                             className="pretty_container",
                         ),
