@@ -724,7 +724,7 @@ def make_power_figure(timeframe_selector, population_selector):
     timeframe = TIME_FRAME_VALUES[timeframe_selector]
 
     if not timeframe:
-        timeframe = 7
+        timeframe = 31
 
     if population_selector == "ALL":
         population = None
