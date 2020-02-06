@@ -204,7 +204,8 @@ app.layout = html.Div(
                             [dcc.Graph(id="charge_graph", 
                                        config={
                                            'displayModeBar':False,
-                                           'queueLength':0
+                                           'queueLength':0,
+                                           'staticPlot': True,
                                        })],
                             id="countGraphContainer",
                             className="pretty_container",
