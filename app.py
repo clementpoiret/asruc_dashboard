@@ -204,6 +204,7 @@ app.layout = html.Div(
                             [dcc.Graph(id="charge_graph")],
                             id="countGraphContainer",
                             className="pretty_container",
+                            config=dict("staticPlot"=True),
                         ),
                     ],
                     id="right-column",
