@@ -132,7 +132,7 @@ app.layout = html.Div(
                         en tant que preuve de concept, et est complètement
                         automatisée.*
 
-                        Version : 1.0.0-1 (2020-02-04)
+                        Version : 1.0.0-2 (2020-02-06)
                         ____
                         """),
                         html.Br(),
@@ -356,7 +356,7 @@ def make_charge_figure(timeframe_selector, population_selector):
     timeframe = TIME_FRAME_VALUES[timeframe_selector]
 
     if not timeframe:
-        timeframe = 7
+        timeframe = 31
 
     if population_selector == "ALL":
         population = None
@@ -578,7 +578,7 @@ def make_sprint_figure(timeframe_selector, population_selector):
     timeframe = TIME_FRAME_VALUES[timeframe_selector]
 
     if not timeframe:
-        timeframe = 7
+        timeframe = 31
 
     if population_selector == "ALL":
         population = None
