@@ -1,20 +1,17 @@
 # Import required libraries
 import copy
-import datetime as dt
 import pathlib
+
+import numpy as np
+import pandas as pd
 
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_table
-import numpy as np
-import pandas as pd
-from dash.dependencies import Input, Output
-
+import utils.controls as c
 import utils.etl as etl
-# Multi-dropdown options
-from controls import (COLNAMES, DPZV, POPULATION, PRETTY_COLNAMES,
-                      TIME_FRAME_NAMES, TIME_FRAME_VALUES, TZFC)
+from dash.dependencies import Input, Output
 
 # get relative data folder
 PATH = pathlib.Path(__file__).parent
@@ -30,16 +27,19 @@ server = app.server
 
 # Create controls
 timeframe_options = [{
-    "label": str(TIME_FRAME_NAMES[timeframe]),
+    "label": str(c.TIME_FRAME_NAMES[timeframe]),
     "value": str(timeframe)
-} for timeframe in TIME_FRAME_NAMES]
+} for timeframe in c.TIME_FRAME_NAMES]
 
 population_options = [{
-    "label": str(POPULATION[population]),
+    "label": str(c.POPULATION[population]),
     "value": str(population)
-} for population in POPULATION]
+} for population in c.POPULATION]
 
-dpzv_options = [{"label": str(DPZV[dpzv]), "value": str(dpzv)} for dpzv in DPZV]
+dpzv_options = [{
+    "label": str(c.DPZV[dpzv]),
+    "value": str(dpzv)
+} for dpzv in c.DPZV]
 
 # Load data
 rpe, seances = etl.get_datasets("./data", ["RPE", "Seances"])
@@ -144,7 +144,7 @@ app.layout = html.Div(
                         dcc.Dropdown(
                             id="timeframe_selector",
                             options=timeframe_options,
-                            value=list(TIME_FRAME_VALUES.keys())[0],
+                            value=list(c.TIME_FRAME_VALUES.keys())[0],
                             multi=False,
                             className="dcc_control",
                         ),
@@ -152,7 +152,7 @@ app.layout = html.Div(
                         dcc.Dropdown(
                             id="population_selector",
                             options=population_options,
-                            value=list(POPULATION.keys())[0],
+                            value=list(c.POPULATION.keys())[0],
                             multi=False,
                             className="dcc_control",
                         ),
@@ -201,10 +201,12 @@ app.layout = html.Div(
                             className="row container-display",
                         ),
                         html.Div(
-                            [dcc.Graph(id="charge_graph", 
-                                       config={
-                                           'staticPlot': True,
-                                       })],
+                            [
+                                dcc.Graph(id="charge_graph",
+                                          config={
+                                              'staticPlot': True,
+                                          })
+                            ],
                             id="countGraphContainer",
                             className="pretty_container",
                         ),
@@ -223,19 +225,19 @@ app.layout = html.Div(
                             id="dpzv_selector",
                             options=dpzv_options,
                             multi=False,
-                            value=list(DPZV.keys())[0],
+                            value=list(c.DPZV.keys())[0],
                             className="dcc_control",
                         ),
                         dcc.Graph(id="dt_graph", config={
-                                           'staticPlot': True,
-                                       })
+                            'staticPlot': True,
+                        })
                     ],
                     className="pretty_container seven columns",
                 ),
                 html.Div(
                     [dcc.Graph(id="fc_graph", config={
-                                           'staticPlot': True,
-                                       })],
+                        'staticPlot': True,
+                    })],
                     className="pretty_container five columns",
                 ),
             ],
@@ -244,15 +246,21 @@ app.layout = html.Div(
         html.Div(
             [
                 html.Div(
-                    [dcc.Graph(id="pie_dt_graph", config={
-                                           'staticPlot': True,
-                                       })],
+                    [
+                        dcc.Graph(id="pie_dt_graph",
+                                  config={
+                                      'staticPlot': True,
+                                  })
+                    ],
                     className="pretty_container five columns",
                 ),
                 html.Div(
-                    [dcc.Graph(id="sprints_graph", config={
-                                           'staticPlot': True,
-                                       })],
+                    [
+                        dcc.Graph(id="sprints_graph",
+                                  config={
+                                      'staticPlot': True,
+                                  })
+                    ],
                     className="pretty_container seven columns",
                 ),
             ],
@@ -268,7 +276,7 @@ app.layout = html.Div(
                             columns=[{
                                 "name": i,
                                 "id": i
-                            } for i in PRETTY_COLNAMES],
+                            } for i in c.PRETTY_COLNAMES],
                             page_current=0,
                             page_size=10,
                             page_action="custom",
@@ -294,8 +302,8 @@ app.layout = html.Div(
                 ),
                 html.Div(
                     [dcc.Graph(id="power_graph", config={
-                                           'staticPlot': True,
-                                       })],
+                        'staticPlot': True,
+                    })],
                     className="pretty_container five columns",
                 ),
             ],
@@ -308,19 +316,6 @@ app.layout = html.Div(
         "flex-direction": "column"
     },
 )
-
-
-# Helper functions
-def filter_dataset(dataset, timeframe, population):
-    upper = dataset.Date.max()
-    lower = upper - dt.timedelta(days=timeframe)
-
-    mask = (dataset.Date <= upper) & (dataset.Date >= lower)
-
-    if population:
-        mask = mask & (dataset.Position == population)
-
-    return dataset[mask]
 
 
 # Selectors -> charge text
@@ -337,15 +332,15 @@ def filter_dataset(dataset, timeframe, population):
     ],
 )
 def update_mentalfc_text(timeframe_selector, population_selector):
-    timeframe = TIME_FRAME_VALUES[timeframe_selector]
+    timeframe = c.TIME_FRAME_VALUES[timeframe_selector]
 
     if population_selector == "ALL":
         population = None
     else:
         population = population_selector
 
-    rpe_filtered = filter_dataset(rpe, timeframe, population)
-    seances_filtered = filter_dataset(seances, timeframe, population)
+    rpe_filtered = etl.filter_dataset(rpe, timeframe, population)
+    seances_filtered = etl.filter_dataset(seances, timeframe, population)
 
     return round(rpe_filtered.RpeMenAp.mean(), 2), round(
         rpe_filtered.RpePhyAp.mean(), 2), round(
@@ -366,7 +361,7 @@ def make_charge_figure(timeframe_selector, population_selector):
 
     layout_charge = copy.deepcopy(layout)
 
-    timeframe = TIME_FRAME_VALUES[timeframe_selector]
+    timeframe = c.TIME_FRAME_VALUES[timeframe_selector]
 
     if not timeframe:
         timeframe = 31
@@ -376,7 +371,7 @@ def make_charge_figure(timeframe_selector, population_selector):
     else:
         population = population_selector
 
-    rpe_filtered = filter_dataset(rpe, timeframe, population)
+    rpe_filtered = etl.filter_dataset(rpe, timeframe, population)
     rpe_graph = rpe_filtered.groupby(["Date"]).mean()
     index = rpe_graph.index
     physical = rpe_graph.RpePhyAp
@@ -445,14 +440,14 @@ def make_dt_figure(timeframe_selector, population_selector, dpzv_selector):
 
     layout_dt = copy.deepcopy(layout)
 
-    timeframe = TIME_FRAME_VALUES[timeframe_selector]
+    timeframe = c.TIME_FRAME_VALUES[timeframe_selector]
 
     if population_selector == "ALL":
         population = None
     else:
         population = population_selector
 
-    seances_filtered = filter_dataset(seances, timeframe, population)
+    seances_filtered = etl.filter_dataset(seances, timeframe, population)
     seances_graph = seances_filtered.groupby(["Nom"]).sum()
     index = seances_graph.index
     y = seances_graph[dpzv_selector]
@@ -486,7 +481,7 @@ def make_dt_figure(timeframe_selector, population_selector, dpzv_selector):
             text_timeframe = "{} Jours".format(timeframe)
 
         layout_dt["title"] = "Distances Parcourues ({}) sur {}".format(
-            DPZV[dpzv_selector], text_timeframe)
+            c.DPZV[dpzv_selector], text_timeframe)
 
         layout_dt["margin"] = dict(l=45, r=0, t=40, b=60)
         layout_dt["xaxis"] = {"title": "Joueuses", "fixedrange": True}
@@ -509,14 +504,14 @@ def make_fc_figure(timeframe_selector, population_selector):
 
     layout_fc = copy.deepcopy(layout)
 
-    timeframe = TIME_FRAME_VALUES[timeframe_selector]
+    timeframe = c.TIME_FRAME_VALUES[timeframe_selector]
 
     if population_selector == "ALL":
         population = None
     else:
         population = population_selector
 
-    seances_filtered = filter_dataset(seances, timeframe, population)
+    seances_filtered = etl.filter_dataset(seances, timeframe, population)
     seance_graph = seances_filtered[seances_filtered.Fcmax > 0].groupby(
         ["Nom"]).mean()
     x = seance_graph.RrBfMoy
@@ -588,7 +583,7 @@ def make_sprint_figure(timeframe_selector, population_selector):
 
     layout_sprint = copy.deepcopy(layout)
 
-    timeframe = TIME_FRAME_VALUES[timeframe_selector]
+    timeframe = c.TIME_FRAME_VALUES[timeframe_selector]
 
     if not timeframe:
         timeframe = 31
@@ -598,7 +593,7 @@ def make_sprint_figure(timeframe_selector, population_selector):
     else:
         population = population_selector
 
-    seances_filtered = filter_dataset(seances, timeframe, population)
+    seances_filtered = etl.filter_dataset(seances, timeframe, population)
     seances_graph = seances_filtered.groupby(["Nom", "Date"
                                              ]).sum().groupby(["Date"]).mean()
     y = seances_graph.Sprints
@@ -657,25 +652,25 @@ def make_pie_figure(timeframe_selector, population_selector):
 
     layout_pie = copy.deepcopy(layout)
 
-    timeframe = TIME_FRAME_VALUES[timeframe_selector]
+    timeframe = c.TIME_FRAME_VALUES[timeframe_selector]
 
     if population_selector == "ALL":
         population = None
     else:
         population = population_selector
 
-    seances_filtered = filter_dataset(seances, timeframe, population)
+    seances_filtered = etl.filter_dataset(seances, timeframe, population)
 
-    dpzv_values = [seances_filtered[dpzv].mean() for dpzv in DPZV.keys()]
+    dpzv_values = [seances_filtered[dpzv].mean() for dpzv in c.DPZV.keys()]
     dpzv_text = [
         "Distance Passée dans l'Interval {}".format(dpzv)
-        for dpzv in DPZV.values()
+        for dpzv in c.DPZV.values()
     ]
 
     data = [
         dict(
             type="pie",
-            labels=list(DPZV.values()),
+            labels=list(c.DPZV.values()),
             values=dpzv_values,
             name="Distances par Zones de Vitesse",
             text=dpzv_text,
@@ -702,8 +697,8 @@ def make_pie_figure(timeframe_selector, population_selector):
      Input("table", "page_size")],
 )
 def make_table(page_current, page_size):
-    table = seances[COLNAMES]
-    table.columns = PRETTY_COLNAMES
+    table = seances[c.COLNAMES]
+    table.columns = c.PRETTY_COLNAMES
 
     return table.iloc[page_current * page_size:(page_current + 1) *
                       page_size].to_dict("records")
@@ -721,7 +716,7 @@ def make_power_figure(timeframe_selector, population_selector):
 
     layout_power = copy.deepcopy(layout)
 
-    timeframe = TIME_FRAME_VALUES[timeframe_selector]
+    timeframe = c.TIME_FRAME_VALUES[timeframe_selector]
 
     if not timeframe:
         timeframe = 31
@@ -731,7 +726,7 @@ def make_power_figure(timeframe_selector, population_selector):
     else:
         population = population_selector
 
-    seances_filtered = filter_dataset(seances, timeframe, population)
+    seances_filtered = etl.filter_dataset(seances, timeframe, population)
     seances_graph = seances_filtered[seances_filtered.Power < 200].groupby(
         ["Nom", "Date"]).sum().groupby(["Date"]).mean()
     y = seances_graph.Power
